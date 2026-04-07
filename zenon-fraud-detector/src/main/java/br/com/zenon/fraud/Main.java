@@ -40,5 +40,11 @@ public class Main {
         fim = System.currentTimeMillis();
         transactions2.stream().limit(10).forEach(System.out::println);
         System.out.println("Versão 02: " + (fim - inicio) + "ms");
+
+        System.out.println("----------------------------------------------------------------");
+
+        List<Transaction> transactions3 = transactionIngestor.ingestNewMethod("data/paysim_with_bad_data.csv");
+        transactions3.forEach(System.out::println);
+        System.out.println(transactions3.size());
     }
 }

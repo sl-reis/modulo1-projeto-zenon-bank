@@ -13,6 +13,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
+import static java.util.stream.Collectors.toList;
 
 public class TransactionIngestor {
 
@@ -26,8 +29,15 @@ public class TransactionIngestor {
             String line;
             while (counter < 1000 && (line = bufferedReader.readLine()) != null) {
                 if (line != null) {
-                    Transaction transaction = getTransaction(line);
-                    transactions.add(transaction);
+                    try {
+                        if (getTransaction(line).isEmpty()) {
+                            continue;
+                        } else {
+                            transactions.add(getTransaction(line).get());
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Erro: " + line);
+                    }
                 }
                 counter++;
             }
@@ -46,21 +56,47 @@ public class TransactionIngestor {
                     .skip(1)
                     .limit(1000)
                     .map(this::getTransaction)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
                     .toList();
         } catch (IOException e) {
             throw new RuntimeException("Error reading file: " + fileName, e);
         }
     }
 
-    private Transaction getTransaction(String line) {
+    private Optional<Transaction> getTransaction(String line) {
         String[] fields = line.split(",");
-        int step = Integer.parseInt(fields[0]);
-        TransactionType transactionType = TransactionType.valueOf(fields[1]);
-        BigDecimal amount = new BigDecimal(fields[2]);
-        Customer customerOrigin = new Customer(fields[3], new BigDecimal(fields[4]), new BigDecimal(fields[5]));
-        Customer customerRecipient = new Customer(fields[6], new BigDecimal(fields[7]), new BigDecimal(fields[8]));
-        boolean isFraud = "1".equals(fields[9]);
-        boolean isFlaggedFraud = "1".equals(fields[10]);
-        return new Transaction(step, transactionType, amount, customerOrigin, customerRecipient, isFraud, isFlaggedFraud);
+        try {
+            int step = Integer.parseInt(fields[0]);
+            TransactionType transactionType = TransactionType.valueOf(fields[1]);
+
+            if (fields[2] == null || fields[2].isEmpty()) {
+                throw new IllegalArgumentException("Amount must not be null or empty");
+            }
+            BigDecimal amount = new BigDecimal(fields[2]);
+
+            if (fields[4] == null || fields[4].isBlank()) {
+                throw new IllegalArgumentException("OldBalanceOrig must not be null or empty");
+            }
+            if (fields[5] == null || fields[5].isBlank()) {
+                throw new IllegalArgumentException("NewBalanceOrig must not be null or empty");
+            }
+            Customer customerOrigin = new Customer(fields[3], new BigDecimal(fields[4]), new BigDecimal(fields[5]));
+
+            if (fields[7] == null || fields[7].isBlank()) {
+                throw new IllegalArgumentException("OldBalanceDest must not be null or empty");
+            }
+            if (fields[8] == null || fields[8].isBlank()) {
+                throw new IllegalArgumentException("NewBalanceDest must not be null or empty");
+            }
+            Customer customerRecipient = new Customer(fields[6], new BigDecimal(fields[7]), new BigDecimal(fields[8]));
+            boolean isFraud = "1".equals(fields[9]);
+            boolean isFlaggedFraud = "1".equals(fields[10]);
+            Transaction transaction = new Transaction(step, transactionType, amount, customerOrigin, customerRecipient, isFraud, isFlaggedFraud);
+            return Optional.of(transaction);
+        } catch (Exception e) {
+            System.err.println("Erro: " + line);
+            return Optional.empty();
+        }
     }
 }
