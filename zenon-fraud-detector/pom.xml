@@ -7,8 +7,8 @@
   <version>1.0.0-SNAPSHOT</version>
 
   <properties>
-    <maven.compile.source>25</maven.compile.source>
-    <maven.compile.target>25</maven.compile.target>
+    <maven.compiler.source>25</maven.compiler.source>
+    <maven.compiler.target>25</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 </project>
