@@ -1,15 +1,15 @@
 package br.com.zenon.fraud;
 
-import br.com.zenon.fraud.domain.Customer;
 import br.com.zenon.fraud.domain.Transaction;
-import br.com.zenon.fraud.domain.enumerator.TransactionType;
+import br.com.zenon.fraud.service.TransactionIngestor;
 
-import java.math.BigDecimal;
+import java.io.IOException;
+import java.util.List;
 
 public class Main {
 
     void main() {
-        Transaction transaction1 = new Transaction(1,
+        /*Transaction transaction1 = new Transaction(1,
                 TransactionType.PAYMENT,
                 new BigDecimal("9839.64"),
                 new Customer("C1231006815", new BigDecimal("170136.00"), new BigDecimal("160296.36")),
@@ -26,6 +26,19 @@ public class Main {
                 false);
 
         IO.println("Transaction1: " + transaction1);
-        IO.println("Transaction2: " + transaction2);
+        IO.println("Transaction2: " + transaction2);*/
+
+        TransactionIngestor transactionIngestor = new TransactionIngestor();
+        long inicio = System.currentTimeMillis();
+        List<Transaction> transactions = transactionIngestor.ingest("data/PS_20174392719_1491204439457_log.csv");
+        long fim = System.currentTimeMillis();
+        transactions.stream().limit(10).forEach(System.out::println);
+        System.out.println("Versão 01: " + (fim - inicio) + "ms");
+
+        inicio = System.currentTimeMillis();
+        List<Transaction> transactions2 = transactionIngestor.ingestNewMethod("data/PS_20174392719_1491204439457_log.csv");
+        fim = System.currentTimeMillis();
+        transactions2.stream().limit(10).forEach(System.out::println);
+        System.out.println("Versão 02: " + (fim - inicio) + "ms");
     }
 }
