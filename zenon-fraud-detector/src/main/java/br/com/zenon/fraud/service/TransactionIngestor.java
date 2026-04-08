@@ -19,6 +19,8 @@ import static java.util.stream.Collectors.toList;
 
 public class TransactionIngestor {
 
+    public static final int FRAUD_LIMIT = 50000;
+
     public List<Transaction> ingest(String fileName) {
         Path path = Paths.get(fileName);
         List<Transaction> transactions = new ArrayList<>();
@@ -27,7 +29,7 @@ public class TransactionIngestor {
             bufferedReader.readLine();
             int counter = 0;
             String line;
-            while (counter < 1000 && (line = bufferedReader.readLine()) != null) {
+            while (counter < FRAUD_LIMIT && (line = bufferedReader.readLine()) != null) {
                 if (line != null) {
                     try {
                         if (getTransaction(line).isEmpty()) {
@@ -54,7 +56,7 @@ public class TransactionIngestor {
             List<String> lines = Files.readAllLines(path);
             return lines.stream()
                     .skip(1)
-                    .limit(1000)
+                    .limit(FRAUD_LIMIT)
                     .map(this::getTransaction)
                     .filter(Optional::isPresent)
                     .map(Optional::get)

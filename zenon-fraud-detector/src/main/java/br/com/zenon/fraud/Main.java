@@ -1,10 +1,14 @@
 package br.com.zenon.fraud;
 
 import br.com.zenon.fraud.domain.Transaction;
+import br.com.zenon.fraud.domain.enumerator.TransactionType;
+import br.com.zenon.fraud.service.FraudAnalyzer;
 import br.com.zenon.fraud.service.TransactionIngestor;
 
-import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class Main {
 
@@ -28,10 +32,12 @@ public class Main {
         IO.println("Transaction1: " + transaction1);
         IO.println("Transaction2: " + transaction2);*/
 
+        System.out.println("----------------------------------------------------------------");
+
         TransactionIngestor transactionIngestor = new TransactionIngestor();
-        long inicio = System.currentTimeMillis();
+        //long inicio = System.currentTimeMillis();
         List<Transaction> transactions = transactionIngestor.ingest("data/PS_20174392719_1491204439457_log.csv");
-        long fim = System.currentTimeMillis();
+        /*long fim = System.currentTimeMillis();
         transactions.stream().limit(10).forEach(System.out::println);
         System.out.println("Versão 01: " + (fim - inicio) + "ms");
 
@@ -39,12 +45,34 @@ public class Main {
         List<Transaction> transactions2 = transactionIngestor.ingestNewMethod("data/PS_20174392719_1491204439457_log.csv");
         fim = System.currentTimeMillis();
         transactions2.stream().limit(10).forEach(System.out::println);
-        System.out.println("Versão 02: " + (fim - inicio) + "ms");
+        System.out.println("Versão 02: " + (fim - inicio) + "ms");*/
 
         System.out.println("----------------------------------------------------------------");
 
-        List<Transaction> transactions3 = transactionIngestor.ingestNewMethod("data/paysim_with_bad_data.csv");
-        transactions3.forEach(System.out::println);
-        System.out.println(transactions3.size());
+        //List<Transaction> transactions3 = transactionIngestor.ingestNewMethod("data/paysim_with_bad_data.csv");
+        //transactions3.forEach(System.out::println);
+        //System.out.println(transactions3.size());
+
+        System.out.println("----------------------------------------------------------------");
+
+        FraudAnalyzer fraudAnalyzer = new FraudAnalyzer(transactions);
+        List<Transaction> fraudulentTransactions = fraudAnalyzer.getFraudulentTransactions();
+        List<BigDecimal> topThreeAmountFraudulentTransactions = fraudAnalyzer.getHighestAmountFraudulentTransactions(3);
+        System.out.println(String.format("1. Total de fraudes: %d", fraudulentTransactions.size()));
+        System.out.println("2. Top 3 fraudes de maior valor: ");
+        topThreeAmountFraudulentTransactions.forEach((value) -> {
+            System.out.println(String.format("%.2f", value));
+        });
+
+        Set<String> customerNamesFromTopThreeFraudulentTransactions = fraudAnalyzer.getCustomerNameFromHighestFraudulentTransactions(5);
+        System.out.println("3. Clientes suspeitos: ");
+        customerNamesFromTopThreeFraudulentTransactions.forEach(System.out::println);
+
+        System.out.println(String.format("4. Prejuízo total: %s", fraudAnalyzer.getTotalFraudAmount()));
+        System.out.println("5. Fraudes por tipo: ");
+        Map<TransactionType, Integer> fraudsByTransactionType = fraudAnalyzer.getNumberOfFraudsByTransactionType();
+        fraudsByTransactionType.forEach((transactionType, transactionAmount) -> {
+            System.out.println(String.format(" - %s: %d", transactionType, transactionAmount));
+        });
     }
 }
