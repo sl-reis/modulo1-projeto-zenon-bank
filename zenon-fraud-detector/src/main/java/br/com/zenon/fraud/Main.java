@@ -2,13 +2,18 @@ package br.com.zenon.fraud;
 
 import br.com.zenon.fraud.domain.Transaction;
 import br.com.zenon.fraud.domain.enumerator.TransactionType;
+import br.com.zenon.fraud.repository.TransactionListRepository;
+import br.com.zenon.fraud.repository.TransactionMapRepository;
+import br.com.zenon.fraud.repository.TransactionRepository;
 import br.com.zenon.fraud.service.FraudAnalyzer;
 import br.com.zenon.fraud.service.TransactionIngestor;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Main {
 
@@ -74,5 +79,32 @@ public class Main {
         fraudsByTransactionType.forEach((transactionType, transactionAmount) -> {
             System.out.println(String.format(" - %s: %d", transactionType, transactionAmount));
         });
+
+        System.out.println("----------------------------------------------------------------");
+
+        TransactionRepository transactionRepository = new TransactionListRepository(transactions);
+        String customerOriginName = "C1868032458";
+        long inicio = System.nanoTime();
+        Optional<Transaction> transactionOptional = transactionRepository.getTransactionByCustomerOriginName(customerOriginName);
+        long fim = System.nanoTime();
+        if (transactionOptional.isPresent()) {
+            System.out.println(transactionOptional.get());
+        } else {
+            System.out.println(String.format("Transação não encontrada para o cliente %s", customerOriginName));
+        }
+        System.out.println(String.format("Tempo de pesquisa com list: %s (ms)", (fim - inicio) / 1_000_000.0));
+
+        System.out.println("----------------------------------------------------------------");
+
+        transactionRepository = new TransactionMapRepository(transactions);
+        inicio = System.nanoTime();
+        Optional<Transaction> transactionOptionalMap = transactionRepository.getTransactionByCustomerOriginName(customerOriginName);
+        fim = System.nanoTime();
+        transactionOptionalMap.ifPresentOrElse(
+                transaction -> System.out.println(transaction),
+                () -> System.out.println(String.format("Transação não encontrada para o cliente %s", customerOriginName))
+        );
+        System.out.println(String.format("Tempo de pesquisa com map: %s (ms)", (fim - inicio) / 1_000_000.0));
+
     }
 }
