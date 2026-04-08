@@ -18,11 +18,11 @@ public class TransactionReport {
     public record Statistics(long totalTransactions, long totalFrauds, BigDecimal totalAmount) {
         private static final Statistics ZERO = new Statistics(0, 0, BigDecimal.ZERO);
 
-        private static Statistics addReportTransaction(Statistics statistics, ReportTransaction rt) {
+        private Statistics addReportTransaction(ReportTransaction rt) {
             return new Statistics(
-                    statistics.totalTransactions() + 1,
-                    statistics.totalFrauds() + (rt.isFraud() ? 1 : 0),
-                    statistics.totalAmount().add(rt.amount())
+                    totalTransactions() + 1,
+                    totalFrauds() + (rt.isFraud() ? 1 : 0),
+                    totalAmount().add(rt.amount())
             );
         }
 
