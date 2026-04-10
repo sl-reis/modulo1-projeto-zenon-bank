@@ -13,7 +13,7 @@ public class ConnectionFactory {
 
     private ConnectionFactory() {
         MysqlDataSource ds = new MysqlDataSource();
-        ds.setURL("jdbc:mysql://localhost:3306/transacoes");
+        ds.setURL("jdbc:mysql://localhost:3306/transacoes?rewriteBatchedStatements=true");
         ds.setUser("root");
         ds.setPassword("senha123");
         this.dataSource = ds;

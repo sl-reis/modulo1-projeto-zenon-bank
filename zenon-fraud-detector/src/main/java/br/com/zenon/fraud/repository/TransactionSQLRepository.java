@@ -11,6 +11,8 @@ import java.util.Optional;
 public class TransactionSQLRepository implements TransactionRepository {
 
 
+    public static final int BATCH_SIZE = 1_000;
+
     @Override
     public Optional<Transaction> getTransactionByCustomerOriginName(String customerOriginName) {
         String sql = """
@@ -87,7 +89,6 @@ public class TransactionSQLRepository implements TransactionRepository {
                  values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
 
-        final int batchSize = 500;
         int count = 0;
 
         try (Connection connection = ConnectionFactory.getInstance().getConnection()) {
@@ -110,12 +111,12 @@ public class TransactionSQLRepository implements TransactionRepository {
                     insertTransactionStmt.addBatch();
 
                     count++;
-                    if (count % batchSize == 0) {
+                    if (count % BATCH_SIZE == 0) {
                         insertTransactionStmt.executeBatch();
                     }
                 }
 
-                if (count % batchSize != 0) {
+                if (count % BATCH_SIZE != 0) {
                     insertTransactionStmt.executeBatch();
                 }
                 connection.commit();
