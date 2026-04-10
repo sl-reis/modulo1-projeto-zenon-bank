@@ -1,0 +1,15 @@
+services:
+  db.transacoes:
+    image: mysql:9
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: senha123
+      MYSQL_DATABASE: transacoes
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./zenon-fraud-detector/data/script.sql:/docker-entrypoint-initdb.d/init.sql
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:

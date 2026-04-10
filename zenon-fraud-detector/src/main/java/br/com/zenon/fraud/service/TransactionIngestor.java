@@ -19,7 +19,7 @@ import static java.util.stream.Collectors.toList;
 
 public class TransactionIngestor {
 
-    public static final int FRAUD_LIMIT = 100_000;
+    public static final int FRAUD_LIMIT = 10_000;
 
     public List<Transaction> ingest(String fileName) {
         Path path = Paths.get(fileName);
