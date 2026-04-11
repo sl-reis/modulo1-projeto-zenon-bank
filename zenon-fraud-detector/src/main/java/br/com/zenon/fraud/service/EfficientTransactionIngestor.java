@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -21,6 +22,8 @@ public class EfficientTransactionIngestor {
 
     public static final int FRAUD_LIMIT = 10_000;
     public static final int BATCH_SIZE = 2500;
+
+    private final Semaphore dbPermits = new Semaphore(10);
 
     public void readAsStream(String filePath, Consumer<Transaction> consumer) {
         try (Stream<String> stream = Files.lines(Paths.get(filePath))) {
@@ -39,7 +42,7 @@ public class EfficientTransactionIngestor {
 
     public void readBatch(String filePath, Consumer<List<Transaction>> consumer) {
         List<String> lines = new ArrayList<>(BATCH_SIZE);
-        try (ExecutorService executorService = Executors.newFixedThreadPool(10);
+        try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
              Stream<String> stream = Files.lines(Paths.get(filePath)).skip(1)) {//.limit(FRAUD_LIMIT)) {
 
             Iterator<String> iterator = stream.iterator();
@@ -71,7 +74,17 @@ public class EfficientTransactionIngestor {
                 .map(Optional::get)
                 .toList();
 
-        consumer.accept(transactions);
+        try {
+            dbPermits.acquire();
+            try {
+                consumer.accept(transactions);
+            } finally {
+                dbPermits.release();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
     }
 
     private Optional<Transaction> getTransaction(String line) {
